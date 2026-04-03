@@ -65,6 +65,11 @@ export const mockChats: Chat[] = [
 ];
 
 export const mockContacts: Contact[] = [
+  // Модераторы Volna
+  { id: 'mod1', phone: '+7 900 111-22-33', firstName: 'Коля', lastName: 'Морозов', online: true, role: 'moderator' },
+  { id: 'mod2', phone: '+7 900 222-33-44', firstName: 'Витя', lastName: 'Соколов', online: true, role: 'moderator' },
+  { id: 'mod3', phone: '+7 900 333-44-55', firstName: 'Олег', lastName: 'Беляев', online: false, lastSeen: '10 мин назад', role: 'moderator' },
+  // Обычные контакты
   { id: 'ct1', phone: '+7 900 123-45-67', firstName: 'Александр', lastName: 'Смирнов', online: true },
   { id: 'ct2', phone: '+7 912 234-56-78', firstName: 'Мария', lastName: 'Иванова', online: false, lastSeen: 'час назад' },
   { id: 'ct3', phone: '+7 925 345-67-89', firstName: 'Дмитрий', lastName: 'Козлов', online: true },

@@ -8,13 +8,21 @@ import ChannelsScreen from '@/components/messenger/ChannelsScreen';
 import ContactsScreen from '@/components/messenger/ContactsScreen';
 import SearchScreen from '@/components/messenger/SearchScreen';
 import ProfileScreen from '@/components/messenger/ProfileScreen';
+import AdminPanel from '@/components/messenger/AdminPanel';
 import NotificationToast from '@/components/messenger/NotificationToast';
+import { checkMessageContent, banUser, findUser } from '@/lib/userSystem';
 
 interface Notification {
   id: string;
   from: string;
   text: string;
   time: string;
+}
+
+interface BanNotice {
+  show: boolean;
+  reason: string;
+  duration: string;
 }
 
 export default function Index() {
@@ -26,11 +34,21 @@ export default function Index() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [starBalance, setStarBalance] = useState(50);
+  const [banNotice, setBanNotice] = useState<BanNotice>({ show: false, reason: '', duration: '' });
 
   useEffect(() => {
     const saved = localStorage.getItem('volna_user');
     if (saved) {
-      try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
+      try {
+        const u = JSON.parse(saved) as User;
+        const reg = findUser(u.phone);
+        if (reg?.banned) {
+          localStorage.removeItem('volna_user');
+          setLoading(false);
+          return;
+        }
+        setUser(u);
+      } catch { /* ignore */ }
     }
     const savedStars = localStorage.getItem('volna_stars');
     if (savedStars) setStarBalance(Number(savedStars));
@@ -40,17 +58,16 @@ export default function Index() {
   // Simulate incoming messages
   useEffect(() => {
     if (!user) return;
-    const names = ['Александр', 'Мария', 'Дмитрий', 'Анна'];
+    const names = ['Коля', 'Витя', 'Александр', 'Мария'];
     const messages = [
       'Привет! Как дела? 👋',
       'Не забудь про встречу завтра',
-      'Отправил документы!',
-      'Звони, когда освободишься',
       '🔥🔥🔥',
       '😂😂 это жесть',
+      'Окей, договорились!',
     ];
     let count = 0;
-    const intervals = [8000, 20000, 38000];
+    const intervals = [10000, 25000, 45000];
     const timers = intervals.map(ms =>
       setTimeout(() => {
         if (count >= 3) return;
@@ -70,7 +87,10 @@ export default function Index() {
     return () => timers.forEach(clearTimeout);
   }, [user]);
 
-  const handleAuth = (u: User) => setUser(u);
+  const handleAuth = (u: User) => {
+    setUser(u);
+    setLoading(false);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('volna_user');
@@ -83,7 +103,25 @@ export default function Index() {
     localStorage.setItem('volna_user', JSON.stringify(u));
   };
 
+  // Автобан за мат и 18+
   const handleSendMessage = (chatId: string, text: string) => {
+    if (!user) return;
+    const { hasMat, hasAdult } = checkMessageContent(text);
+
+    if (hasMat || hasAdult) {
+      const reason = hasMat
+        ? 'Использование нецензурной лексики в чате'
+        : 'Распространение контента 18+ в чате';
+      banUser(user.phone, reason, 'month', 'AutoMod 🤖');
+      setBanNotice({ show: true, reason, duration: '30 дней' });
+      setTimeout(() => {
+        localStorage.removeItem('volna_user');
+        setUser(null);
+        setBanNotice({ show: false, reason: '', duration: '' });
+      }, 3500);
+      return;
+    }
+
     const now = new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
     setChats(prev => prev.map(c => {
       if (c.id !== chatId) return c;
@@ -197,6 +235,10 @@ export default function Index() {
             onBuyStars={handleBuyStars}
           />
         );
+      case 'admin':
+        return (user.role === 'admin' || user.role === 'moderator')
+          ? <AdminPanel currentUser={user} />
+          : null;
       default:
         return null;
     }
@@ -214,6 +256,32 @@ export default function Index() {
         {renderScreen()}
       </main>
       <NotificationToast notifications={notifications} onDismiss={handleDismissNotif} />
+
+      {/* AutoBan overlay */}
+      {banNotice.show && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(16px)' }}>
+          <div className="text-center animate-scale-in max-w-sm mx-4 glass-strong rounded-3xl p-8"
+            style={{ border: '1px solid hsl(var(--destructive) / 0.5)' }}>
+            <div className="text-6xl mb-4">🚫</div>
+            <h2 className="text-2xl font-bold font-golos text-white mb-2">Аккаунт заблокирован</h2>
+            <div className="px-4 py-3 rounded-2xl mb-4"
+              style={{ background: 'hsl(var(--destructive) / 0.15)', border: '1px solid hsl(var(--destructive) / 0.3)' }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: 'hsl(var(--destructive))' }}>Причина:</p>
+              <p className="text-sm text-white">{banNotice.reason}</p>
+            </div>
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Срок: <span className="text-white font-bold">{banNotice.duration}</span>
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Автоматическая система модерации · AutoMod 🤖
+            </p>
+            <p className="text-xs mt-3 animate-pulse" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Выход через 3 секунды...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

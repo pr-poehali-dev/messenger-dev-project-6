@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Channel } from '@/types/messenger';
 import Icon from '@/components/ui/icon';
 
@@ -29,6 +29,29 @@ function getEmoji(id: string) {
 export default function ChannelsScreen({ channels }: ChannelsScreenProps) {
   const [selected, setSelected] = useState<Channel | null>(null);
   const [search, setSearch] = useState('');
+  // Локальный счётчик подписчиков — накручиваем каждые 2 минуты +100
+  const [subsBoost, setSubsBoost] = useState<Record<string, number>>({});
+  const [growAnim, setGrowAnim] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSubsBoost(prev => {
+        const next: Record<string, number> = { ...prev };
+        channels.forEach(ch => {
+          next[ch.id] = (next[ch.id] || 0) + 100;
+        });
+        return next;
+      });
+      // Анимация роста для т��кущего выбранного канала
+      if (selected) {
+        setGrowAnim(selected.id);
+        setTimeout(() => setGrowAnim(null), 1500);
+      }
+    }, 2 * 60 * 1000); // каждые 2 минуты
+    return () => clearInterval(t);
+  }, [channels, selected]);
+
+  const getSubs = (ch: Channel) => ch.subscribers + (subsBoost[ch.id] || 0);
 
   const filtered = channels.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -50,8 +73,11 @@ export default function ChannelsScreen({ channels }: ChannelsScreenProps) {
                 <h3 className="font-semibold text-sm text-white">{selected.name}</h3>
                 {selected.verified && <Icon name="BadgeCheck" size={14} style={{ color: 'hsl(var(--accent))' }} />}
               </div>
-              <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {formatSubs(selected.subscribers)} подписчиков
+              <p className="text-xs flex items-center gap-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {formatSubs(getSubs(selected))} подписчиков
+                {growAnim === selected.id && (
+                  <span className="text-[10px] font-bold animate-fade-in" style={{ color: 'hsl(145 80% 55%)' }}>+100 🚀</span>
+                )}
               </p>
             </div>
           </div>
@@ -136,7 +162,7 @@ export default function ChannelsScreen({ channels }: ChannelsScreenProps) {
                 {ch.lastPost}
               </p>
               <span className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {formatSubs(ch.subscribers)} подписчиков
+                {formatSubs(getSubs(ch))} подписчиков
               </span>
             </div>
             <div className="flex flex-col items-end gap-1.5">

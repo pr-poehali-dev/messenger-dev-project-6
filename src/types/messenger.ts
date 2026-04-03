@@ -8,6 +8,10 @@ export interface User {
   avatar?: string;
   online: boolean;
   lastSeen?: string;
+  role?: 'admin' | 'moderator' | 'user';
+  banned?: boolean;
+  banReason?: string;
+  banUntil?: string;
 }
 
 export interface Message {
@@ -41,6 +45,8 @@ export interface Contact {
   avatar?: string;
   online: boolean;
   lastSeen?: string;
+  role?: 'admin' | 'moderator' | 'user';
+  banned?: boolean;
 }
 
 export interface Channel {
@@ -54,6 +60,7 @@ export interface Channel {
   unread: number;
   verified?: boolean;
   messages: Message[];
+  ownerId?: string;
 }
 
-export type AppScreen = 'auth' | 'chats' | 'channels' | 'contacts' | 'search' | 'profile';
+export type AppScreen = 'auth' | 'chats' | 'channels' | 'contacts' | 'search' | 'profile' | 'admin';

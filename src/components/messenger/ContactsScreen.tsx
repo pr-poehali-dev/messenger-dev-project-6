@@ -138,11 +138,30 @@ export default function ContactsScreen({ contacts, onAddContact, onStartChat }: 
                   {contact.online && <div className="online-dot absolute bottom-0 right-0" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-white truncate">
-                    {contact.firstName} {contact.lastName || ''}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    {/* Status icon */}
+                    {contact.banned
+                      ? <span className="text-sm" title="Заблокирован">🟥</span>
+                      : contact.role === 'admin'
+                        ? <span className="text-sm" title="Администратор">🛡️</span>
+                        : contact.role === 'moderator'
+                          ? <span className="text-sm" title="Модератор">⚔️</span>
+                          : contact.online
+                            ? <span className="text-sm" title="В сети">🟢</span>
+                            : <span className="text-sm" title="Не в сети">🔴</span>
+                    }
+                    <p className="font-semibold text-sm text-white truncate">
+                      {contact.firstName} {contact.lastName || ''}
+                    </p>
+                  </div>
                   <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {contact.online ? '🟢 онлайн' : contact.lastSeen ? `был(а) ${contact.lastSeen}` : contact.phone}
+                    {contact.banned
+                      ? `🚫 Заблокирован`
+                      : contact.online
+                        ? 'онлайн'
+                        : contact.lastSeen
+                          ? `был(а) ${contact.lastSeen}`
+                          : contact.phone}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

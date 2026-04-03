@@ -16,8 +16,18 @@ const navItems = [
   { id: 'profile' as AppScreen, icon: 'User', label: 'Профиль' },
 ];
 
+function getRoleIcon(role?: string, banned?: boolean) {
+  if (banned) return '🟥';
+  if (role === 'admin') return '🛡️';
+  if (role === 'moderator') return '⚔️';
+  return null;
+}
+
 export default function Sidebar({ currentScreen, onNavigate, user, totalUnread }: SidebarProps) {
   const initials = (user.firstName[0] + (user.lastName?.[0] || '')).toUpperCase();
+  const isAdmin = user.role === 'admin';
+  const isMod = user.role === 'admin' || user.role === 'moderator';
+  const roleIcon = getRoleIcon(user.role);
 
   return (
     <aside className="w-[72px] h-screen flex flex-col items-center py-4 gap-2 glass border-r"
@@ -60,14 +70,44 @@ export default function Sidebar({ currentScreen, onNavigate, user, totalUnread }
             </button>
           );
         })}
+
+        {/* Admin panel button — only for admins/mods */}
+        {isMod && (
+          <button
+            onClick={() => onNavigate('admin')}
+            className={`relative w-full flex flex-col items-center gap-1 py-2.5 rounded-2xl transition-all duration-200 group mt-1 ${currentScreen === 'admin' ? '' : 'hover:bg-secondary/60'}`}
+            style={{
+              background: currentScreen === 'admin'
+                ? 'linear-gradient(135deg, hsl(0 75% 55% / 0.25), hsl(30 90% 55% / 0.15))'
+                : undefined,
+              border: currentScreen === 'admin' ? '1px solid hsl(0 75% 55% / 0.35)' : undefined,
+            }}
+            title="Панель администратора"
+          >
+            <span className="text-lg leading-none">🛡️</span>
+            <span className="text-[9px] font-medium leading-none"
+              style={{ color: currentScreen === 'admin' ? 'hsl(0 75% 65%)' : 'hsl(var(--foreground))', opacity: currentScreen === 'admin' ? 1 : 0.6 }}>
+              Админ
+            </span>
+          </button>
+        )}
       </nav>
 
-      {/* User avatar */}
-      <div className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-105 font-bold text-sm text-white"
-        style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--neon-pink)))' }}
-        onClick={() => onNavigate('profile')}
-        title={user.firstName}>
-        {initials}
+      {/* User avatar with role badge */}
+      <div className="relative cursor-pointer" onClick={() => onNavigate('profile')} title={user.firstName}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white transition-transform hover:scale-105"
+          style={{
+            background: isAdmin
+              ? 'linear-gradient(135deg, hsl(0 75% 55%), hsl(30 90% 55%))'
+              : isMod
+                ? 'linear-gradient(135deg, hsl(260 80% 65%), hsl(195 90% 55%))'
+                : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--neon-pink)))'
+          }}>
+          {initials}
+        </div>
+        {roleIcon && (
+          <span className="absolute -bottom-0.5 -right-0.5 text-xs leading-none">{roleIcon}</span>
+        )}
       </div>
     </aside>
   );
