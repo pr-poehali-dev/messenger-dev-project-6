@@ -40,6 +40,7 @@ export default function AuthScreen({ onAuth }: AuthScreenProps) {
 
   const handleVerifyCode = () => {
     if (code.length < 4) { setError('Введите код из 4 цифр'); return; }
+    if (code !== '1234') { setError('Неверный код. Используйте 1234'); return; }
     setError('');
     setStep('profile');
   };
@@ -118,9 +119,17 @@ export default function AuthScreen({ onAuth }: AuthScreenProps) {
                 <Icon name="ArrowLeft" size={16} /> Назад
               </button>
               <h2 className="text-xl font-semibold font-golos mb-1 text-white">Код подтверждения</h2>
-              <p className="text-sm mb-6" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              <p className="text-sm mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Мы отправили код на <span className="text-white font-medium">{phone}</span>
               </p>
+              {/* Demo hint */}
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4"
+                style={{ background: 'hsl(var(--accent) / 0.12)', border: '1px solid hsl(var(--accent) / 0.3)' }}>
+                <span className="text-base">💡</span>
+                <p className="text-xs leading-relaxed" style={{ color: 'hsl(var(--accent))' }}>
+                  Демо-режим: используйте код <span className="font-bold text-white">1234</span> для входа
+                </p>
+              </div>
               <div className="mb-4">
                 <label className="text-xs font-medium mb-2 block" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   Код из SMS
