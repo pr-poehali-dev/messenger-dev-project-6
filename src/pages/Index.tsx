@@ -25,12 +25,15 @@ export default function Index() {
   const [channels] = useState<Channel[]>(mockChannels);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [starBalance, setStarBalance] = useState(50);
 
   useEffect(() => {
     const saved = localStorage.getItem('volna_user');
     if (saved) {
       try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
     }
+    const savedStars = localStorage.getItem('volna_stars');
+    if (savedStars) setStarBalance(Number(savedStars));
     setLoading(false);
   }, []);
 
@@ -43,10 +46,11 @@ export default function Index() {
       'Не забудь про встречу завтра',
       'Отправил документы!',
       'Звони, когда освободишься',
-      'Увидел твоё сообщение ✓',
+      '🔥🔥🔥',
+      '😂😂 это жесть',
     ];
     let count = 0;
-    const intervals = [8000, 18000, 32000];
+    const intervals = [8000, 20000, 38000];
     const timers = intervals.map(ms =>
       setTimeout(() => {
         if (count >= 3) return;
@@ -126,6 +130,22 @@ export default function Index() {
     setScreen('chats');
   };
 
+  const handleSpendStars = (amount: number) => {
+    setStarBalance(prev => {
+      const next = Math.max(0, prev - amount);
+      localStorage.setItem('volna_stars', String(next));
+      return next;
+    });
+  };
+
+  const handleBuyStars = (amount: number) => {
+    setStarBalance(prev => {
+      const next = prev + amount;
+      localStorage.setItem('volna_stars', String(next));
+      return next;
+    });
+  };
+
   const totalUnread = chats.reduce((sum, c) => sum + c.unread, 0);
 
   if (loading) {
@@ -152,7 +172,15 @@ export default function Index() {
   const renderScreen = () => {
     switch (screen) {
       case 'chats':
-        return <ChatsScreen chats={chats} user={user} onSendMessage={handleSendMessage} />;
+        return (
+          <ChatsScreen
+            chats={chats}
+            user={user}
+            onSendMessage={handleSendMessage}
+            starBalance={starBalance}
+            onSpendStars={handleSpendStars}
+          />
+        );
       case 'channels':
         return <ChannelsScreen channels={channels} />;
       case 'contacts':
@@ -160,7 +188,15 @@ export default function Index() {
       case 'search':
         return <SearchScreen chats={chats} contacts={contacts} channels={channels} onOpenChat={handleOpenChat} />;
       case 'profile':
-        return <ProfileScreen user={user} onUpdate={handleUpdateUser} onLogout={handleLogout} />;
+        return (
+          <ProfileScreen
+            user={user}
+            onUpdate={handleUpdateUser}
+            onLogout={handleLogout}
+            starBalance={starBalance}
+            onBuyStars={handleBuyStars}
+          />
+        );
       default:
         return null;
     }

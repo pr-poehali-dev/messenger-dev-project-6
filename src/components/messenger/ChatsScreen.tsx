@@ -8,6 +8,8 @@ interface ChatsScreenProps {
   user: User;
   onSendMessage: (chatId: string, text: string) => void;
   onCreateChat?: (chat: Chat) => void;
+  starBalance: number;
+  onSpendStars: (amount: number) => void;
 }
 
 function getInitials(name: string) {
@@ -26,7 +28,7 @@ function getColor(id: string) {
 
 type CreateMode = 'chat' | 'group' | 'channel' | null;
 
-export default function ChatsScreen({ chats: initialChats, user, onSendMessage, onCreateChat }: ChatsScreenProps) {
+export default function ChatsScreen({ chats: initialChats, user, onSendMessage, onCreateChat, starBalance, onSpendStars }: ChatsScreenProps) {
   const [chats, setChats] = useState(initialChats);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [search, setSearch] = useState('');
@@ -252,6 +254,8 @@ export default function ChatsScreen({ chats: initialChats, user, onSendMessage, 
         chat={selectedChat}
         user={user}
         onSendMessage={onSendMessage}
+        starBalance={starBalance}
+        onSpendStars={onSpendStars}
       />
     </div>
   );

@@ -6,10 +6,13 @@ interface ProfileScreenProps {
   user: User;
   onUpdate: (user: User) => void;
   onLogout: () => void;
+  starBalance: number;
+  onBuyStars: (amount: number) => void;
 }
 
-export default function ProfileScreen({ user, onUpdate, onLogout }: ProfileScreenProps) {
+export default function ProfileScreen({ user, onUpdate, onLogout, starBalance, onBuyStars }: ProfileScreenProps) {
   const [editing, setEditing] = useState(false);
+  const [showBuyStars, setShowBuyStars] = useState(false);
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName || '');
   const [username, setUsername] = useState(user.username || '');
@@ -110,6 +113,51 @@ export default function ProfileScreen({ user, onUpdate, onLogout }: ProfileScree
           </div>
         </div>
       )}
+
+      {/* Stars block */}
+      <div className="px-6 pb-4">
+        <div className="glass rounded-2xl p-4 animate-fade-in"
+          style={{ border: '1px solid hsl(45 100% 55% / 0.3)', background: 'linear-gradient(135deg, hsl(45 100% 55% / 0.08), hsl(30 100% 60% / 0.05))' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl"
+                style={{ background: 'hsl(45 100% 55% / 0.2)' }}>⭐</div>
+              <div>
+                <p className="text-xs font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Звёзды Volna</p>
+                <p className="text-2xl font-bold font-golos" style={{ color: 'hsl(45 100% 65%)' }}>{starBalance}</p>
+              </div>
+            </div>
+            <button onClick={() => setShowBuyStars(v => !v)}
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(30 100% 60%))', boxShadow: '0 0 20px hsl(45 100% 55% / 0.3)' }}>
+              + Пополнить
+            </button>
+          </div>
+          {showBuyStars && (
+            <div className="mt-3 pt-3 border-t animate-fade-in" style={{ borderColor: 'hsl(45 100% 55% / 0.2)' }}>
+              <p className="text-xs mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>Выберите пакет звёзд:</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { stars: 50, label: '⭐ 50', price: '99₽' },
+                  { stars: 150, label: '⭐ 150', price: '249₽' },
+                  { stars: 500, label: '⭐ 500', price: '699₽' },
+                ].map(pkg => (
+                  <button key={pkg.stars}
+                    onClick={() => { onBuyStars(pkg.stars); setShowBuyStars(false); }}
+                    className="rounded-xl p-2.5 text-center transition-all hover:scale-105"
+                    style={{ background: 'hsl(45 100% 55% / 0.15)', border: '1px solid hsl(45 100% 55% / 0.3)' }}>
+                    <div className="text-sm font-bold text-white">{pkg.label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'hsl(45 100% 65%)' }}>{pkg.price}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] mt-2 text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                Демо-режим: звёзды добавляются бесплатно
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Stats */}
       <div className="px-6 pb-5">
